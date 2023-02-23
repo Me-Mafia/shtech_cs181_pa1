@@ -87,74 +87,85 @@ def depthFirstSearch(problem):
     print("Start's successors:", problem.getSuccessors(problem.getStartState()))
     """
     "*** YOUR CODE HERE ***"
-    #print("Start:", problem.getStartState())
-    #print("Start's successors:", problem.getSuccessors(problem.getStartState()))  
     dfs_stack = util.Stack()
-    cache = util.Stack()
-    route = []
-    visited = []
     dfs_stack.push(problem.getStartState())
-    depth = 0
-    
+    expanded = util.Counter()
+    expanded[problem.getStartState()] = 1
+    route = []
+    paths = util.Stack()
     while not dfs_stack.isEmpty():
         current = dfs_stack.pop()
-        assert(current not in visited)
-
+        if not paths.isEmpty():
+            route = paths.pop()
         if problem.isGoalState(current):
             break
-
         successors = problem.getSuccessors(current)
-       # successors.reverse()        
-        is_end = 0
-        cnt = 0
         for i in successors:
-            if i[0] not in visited:
-                cnt += 1
-                is_end = 1
-                dfs_stack.push(i[0]) 
-                cache.push(i[1])
-        depth = depth+1 if cnt <2  else 0
-        visited.append(current) 
-        if is_end == 0: 
-            for i in range(depth):
-                route.pop()
-            depth = 0
-        route.append(cache.pop())
+            if expanded[i[0]] == 0:
+                dfs_stack.push(i[0])
+                paths.push(route + [i[1]])
+                #print(route)
+        expanded[current] = 1
     return route
 
 def breadthFirstSearch(problem):
     """Search the shallowest nodes in the search tree first."""
     "*** YOUR CODE HERE ***"
-    route = []
+    
     bfs_queue = util.Queue()
     bfs_queue.push(problem.getStartState())
-    cache = util.Queue()
     expanded = util.Counter()
-    expanded[problem.getStartState()] += 1
-    hirarchy = []
+    expanded[problem.getStartState()] = 1
+    route = []
+    paths = util.Queue()
     while not bfs_queue.isEmpty():
-        tmp = []
         current = bfs_queue.pop()
+        if not paths.isEmpty():
+            route = paths.pop()
         if problem.isGoalState(current):
             break
         successors = problem.getSuccessors(current)
         for i in successors:
             if expanded[i[0]] == 0:
                 bfs_queue.push(i[0])
-                cache.push(i)
-                tmp.append((current, i[1], i[0]))
-                expanded[i[0]] += 1
-        if len(tmp) != 0:
-            hirarchy.append(tmp)
-    for i in range(len(hirarchy)):
-        pass
-    return route 
+                paths.push(route + [i[1]])
+                if not problem.isGoalState(i[0]):
+                    expanded[i[0]] = 1
+    return route
+    
    # util.raiseNotDefined()
 
 def uniformCostSearch(problem):
     """Search the node of least total cost first."""
     "*** YOUR CODE HERE ***"
-    util.raiseNotDefined()
+    ucs_queue = util.PriorityQueue()
+    ucs_queue.push(problem.getStartState(),0)
+    expanded = util.Counter()
+    dis = util.Counter()
+    expanded[problem.getStartState()] = 1
+    route = []
+    paths = util.PriorityQueue()
+    while not ucs_queue.isEmpty():
+        current = ucs_queue.pop()
+        if not paths.isEmpty():
+            route = paths.pop()
+            print(route)
+        if problem.isGoalState(current):
+            break
+        successors = problem.getSuccessors(current)
+        for i in successors:
+            if expanded[i[0]] == 0:
+                dis[i[0]] = dis[current] + float(i[2])
+                ucs_queue.push(i[0], dis[i[0]])
+                #if float(i[2]) <11 and float(i[2]) >= 1:
+                #   print(i[1])
+                paths.push(route + [i[1]], dis[i[0]])
+                #if (dis[i[0]] < 15):
+                #  print(dis[i[0]], i[0])
+                if not problem.isGoalState(i[0]):
+                    expanded[i[0]] = 1
+
+    return route
 
 def nullHeuristic(state, problem=None):
     """
