@@ -184,6 +184,7 @@ def aStarSearch(problem, heuristic=nullHeuristic):
     expanded = util.Counter()
     dis = util.Counter()
     expanded[problem.getStartState()] = 1
+    dis[problem.getStartState()] = heuristic(problem.getStartState(), problem)
     route = []
     paths = util.PriorityQueue()
     while not ucs_queue.isEmpty():
@@ -196,11 +197,11 @@ def aStarSearch(problem, heuristic=nullHeuristic):
         successors = problem.getSuccessors(current)
         for i in successors:
             if expanded[i[0]] == 0:
-                dis[i[0]] = dis[current] + float(i[2] + heuristic(i[0], problem))
-                ucs_queue.push(i[0], dis[i[0]])
+                dis[i[0]] = dis[current] + float(i[2])
+                ucs_queue.push(i[0], dis[i[0]] + heuristic(i[0], problem))
                 #if float(i[2]) <11 and float(i[2]) >= 1:
                 #   print(i[1])
-                paths.push(route + [i[1]], dis[i[0]])
+                paths.push(route + [i[1]], dis[i[0]] + heuristic(i[0], problem))
                 #if (dis[i[0]] < 15):
                 #  print(dis[i[0]], i[0])
                 if not problem.isGoalState(i[0]):
