@@ -129,20 +129,26 @@ def breadthFirstSearch(problem):
     bfs_queue = util.Queue()
     bfs_queue.push(problem.getStartState())
     cache = util.Queue()
-    visited = util.Counter()
-
+    expanded = util.Counter()
+    expanded[problem.getStartState()] += 1
+    hirarchy = []
     while not bfs_queue.isEmpty():
+        tmp = []
         current = bfs_queue.pop()
-        assert(visited[current] == 0)
-        if problem.isGoalState():
+        if problem.isGoalState(current):
             break
-
-        successors = problem.getSuccessorState(current)
+        successors = problem.getSuccessors(current)
         for i in successors:
-            if visited[i[0]] == 0:
+            if expanded[i[0]] == 0:
                 bfs_queue.push(i[0])
                 cache.push(i)
-            
+                tmp.append((current, i[1], i[0]))
+                expanded[i[0]] += 1
+        if len(tmp) != 0:
+            hirarchy.append(tmp)
+    for i in range(len(hirarchy)):
+        pass
+    return route 
    # util.raiseNotDefined()
 
 def uniformCostSearch(problem):
