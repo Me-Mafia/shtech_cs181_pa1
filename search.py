@@ -114,8 +114,8 @@ def breadthFirstSearch(problem):
     
     bfs_queue = util.Queue()
     bfs_queue.push(problem.getStartState())
-    expanded = util.Counter()
-    expanded[problem.getStartState()] = 1
+    expanded = []
+    expanded.append(problem.getStartState())
     route = []
     paths = util.Queue()
     while not bfs_queue.isEmpty():
@@ -126,11 +126,12 @@ def breadthFirstSearch(problem):
             break
         successors = problem.getSuccessors(current)
         for i in successors:
-            if expanded[i[0]] == 0:
+            if i[0] not in expanded:
                 bfs_queue.push(i[0])
                 paths.push(route + [i[1]])
                 if not problem.isGoalState(i[0]):
-                    expanded[i[0]] = 1
+                    expanded.append(i[0])
+    #print(route)
     return route
     
    # util.raiseNotDefined()

@@ -288,6 +288,7 @@ class CornersProblem(search.SearchProblem):
         # Please add any code here which you would like to use
         # in initializing the problem
         "*** YOUR CODE HERE ***"
+        self.cornersVisited = util.Counter()
 
     def getStartState(self):
         """
@@ -295,14 +296,18 @@ class CornersProblem(search.SearchProblem):
         space)
         """
         "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        #print("start state: ", self.startingPosition)
+        return (self.startingPosition, self.corners)
+        #util.raiseNotDefined()
 
     def isGoalState(self, state):
         """
         Returns whether this search state is a goal state of the problem.
         """
         "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        #print("end")
+        return len(state[1]) == 0
+        #util.raiseNotDefined()
 
     def getSuccessors(self, state):
         """
@@ -316,16 +321,22 @@ class CornersProblem(search.SearchProblem):
         """
 
         successors = []
+        x, y = state[0]
+                
         for action in [Directions.NORTH, Directions.SOUTH, Directions.EAST, Directions.WEST]:
             # Add a successor state to the successor list if the action is legal
             # Here's a code snippet for figuring out whether a new position hits a wall:
-            #   x,y = currentPosition
-            #   dx, dy = Actions.directionToVector(action)
-            #   nextx, nexty = int(x + dx), int(y + dy)
-            #   hitsWall = self.walls[nextx][nexty]
+            dx, dy = Actions.directionToVector(action)
+            nextx, nexty = int(x + dx), int(y + dy)
+            hitsWall = self.walls[nextx][nexty]
+            left = tuple(i for i in state[1] if i != (nextx, nexty) )
+            nextState = ((nextx, nexty), left)
+            successor = (nextState, action, 1)
 
             "*** YOUR CODE HERE ***"
-
+            if not hitsWall:    
+                #print(successor)
+                successors.append(successor)
         self._expanded += 1 # DO NOT CHANGE
         return successors
 
@@ -358,9 +369,14 @@ def cornersHeuristic(state, problem):
     """
     corners = problem.corners # These are the corner coordinates
     walls = problem.walls # These are the walls of the maze, as a Grid (game.py)
-
+    if not problem.isGoalState(state):
+        distances = (util.manhattanDistance(state[0],i) for i in state[1])
+        ret = max(distances)
+        return ret
+    else:
+        return 0
     "*** YOUR CODE HERE ***"
-    return 0 # Default to trivial solution
+    # Default to trivial solution
 
 class AStarCornersAgent(SearchAgent):
     "A SearchAgent for FoodSearchProblem using A* and your foodHeuristic"
@@ -452,9 +468,60 @@ def foodHeuristic(state, problem):
     Subsequent calls to this heuristic can access
     problem.heuristicInfo['wallCount']
     """
+    def mazeDist(point1, point2, gameState, dis):
+        x1, y1 = point1
+        x2, y2 = point2
+        walls = gameState.getWalls()
+        prob = PositionSearchProblem(gameState, start=point1, goal=point2, warn=False, visualize=False)
+        
+        # embedded astar
+        ucs_queue = util.PriorityQueue()
+        ucs_queue.push(prob.getStartState(),0)
+        expanded = util.Counter()
+        expanded[prob.getStartState()] = 1
+        dis[prob.getStartState()] = manhattanHeuristic(prob.getStartState(), prob)
+        route = []
+        paths = util.PriorityQueue()
+        while not ucs_queue.isEmpty():
+            current = ucs_queue.pop()
+            if not paths.isEmpty():
+                route = paths.pop()
+            if prob.isGoalState(current):
+                break
+            successors = prob.getSuccessors(current)
+            for i in successors:
+                if expanded[i[0]] == 0:
+                    dis[i[0]] = dis[current] + float(i[2])
+                    ucs_queue.push(i[0], dis[i[0]] + manhattanHeuristic(i[0], prob))
+                    paths.push(route + [i[1]], dis[i[0]] + manhattanHeuristic(i[0], prob))
+                    dis[i[0]] = len(route) + 1
+                    if not prob.isGoalState(i[0]):
+                        expanded[i[0]] = 1
+        return len(route)
+
+    def euc(d1, d2):
+        return (((d1[0]-d2[0]) ** 2) + ((d1[1]-d2[1]) ** 2)) ** 0.4
+    
     position, foodGrid = state
-    "*** YOUR CODE HERE ***"
-    return 0
+    foodGrid = foodGrid.asList()
+    problem.heuristicInfo['swormCounter'] = util.Counter()
+    distances = []
+    if not problem.isGoalState(state):
+        normalCounter = util.normalize( problem.heuristicInfo['swormCounter'] )
+        for i in foodGrid:
+            if problem.heuristicInfo['swormCounter'][i] == 0:
+                distances.append(mazeDist(position, i, problem.startingGameState, problem.heuristicInfo['swormCounter']))
+            else:
+                distances.append( problem.heuristicInfo['swormCounter'][i])
+        #distances_base = (mazeDist(position, i, problem.startingGameState, problem.heuristicInfo['swormCounter']) for i in foodGrid)
+        ret = max(distances)
+        #print(ret)
+        #for i in foodGrid:
+        #   foodCounter[util.manhattanDistance(i, position)] += 1
+    else:
+        ret = 0
+    
+    return ret
 
 class ClosestDotSearchAgent(SearchAgent):
     "Search for all food using a sequence of searches"
@@ -483,9 +550,9 @@ class ClosestDotSearchAgent(SearchAgent):
         food = gameState.getFood()
         walls = gameState.getWalls()
         problem = AnyFoodSearchProblem(gameState)
-
-        "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        route = search.bfs(problem)
+        return route
+        #util.raiseNotDefined()
 
 class AnyFoodSearchProblem(PositionSearchProblem):
     """
@@ -519,9 +586,8 @@ class AnyFoodSearchProblem(PositionSearchProblem):
         complete the problem definition.
         """
         x,y = state
-
-        "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        return self.food[x][y]
+        #util.raiseNotDefined()
 
 class ApproximateSearchAgent(Agent):
     "Implement your agent here.  Change anything but the class name."
