@@ -149,7 +149,7 @@ def uniformCostSearch(problem):
         current = ucs_queue.pop()
         if not paths.isEmpty():
             route = paths.pop()
-            print(route)
+            #print(route)
         if problem.isGoalState(current):
             break
         successors = problem.getSuccessors(current)
@@ -177,7 +177,37 @@ def nullHeuristic(state, problem=None):
 def aStarSearch(problem, heuristic=nullHeuristic):
     """Search the node that has the lowest combined cost and heuristic first."""
     "*** YOUR CODE HERE ***"
-    util.raiseNotDefined()
+    """Search the node of least total cost first."""
+    "*** YOUR CODE HERE ***"
+    ucs_queue = util.PriorityQueue()
+    ucs_queue.push(problem.getStartState(),0)
+    expanded = util.Counter()
+    dis = util.Counter()
+    expanded[problem.getStartState()] = 1
+    route = []
+    paths = util.PriorityQueue()
+    while not ucs_queue.isEmpty():
+        current = ucs_queue.pop()
+        if not paths.isEmpty():
+            route = paths.pop()
+            #print(route)
+        if problem.isGoalState(current):
+            break
+        successors = problem.getSuccessors(current)
+        for i in successors:
+            if expanded[i[0]] == 0:
+                dis[i[0]] = dis[current] + float(i[2] + heuristic(i[0], problem))
+                ucs_queue.push(i[0], dis[i[0]])
+                #if float(i[2]) <11 and float(i[2]) >= 1:
+                #   print(i[1])
+                paths.push(route + [i[1]], dis[i[0]])
+                #if (dis[i[0]] < 15):
+                #  print(dis[i[0]], i[0])
+                if not problem.isGoalState(i[0]):
+                    expanded[i[0]] = 1
+
+    return route
+
 
 
 # Abbreviations
